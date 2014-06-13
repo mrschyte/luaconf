@@ -1,0 +1,54 @@
+luaconf the configuration library
+(C) 2009 Peter Kasza
+
+What is luaconf?
+    It is a lightweight "library" for retrieving variables from lua configuration scripts.
+    Well, its not really a library, more like an example on how to do the aforementioned.
+
+Usage:
+    -- Write default configuration values to luaconf.i
+        and generate the luaconf_wrap.cxx using swig
+
+    -- in your program write something like this:
+        lua_State* L = luaL_newstate();
+        luaL_openlibs(L);
+        luaopen_luaconf(L);
+
+        if (luaL_dofile(L, config_file) != 0) {
+            printf("couldn't parse file: %s\n", config_file);
+        }
+
+        // use lua_evalexpr here
+        lua_close(L);
+
+    -- use lua_evalexpr to retrieve configuration values (with printf style fmt strings)
+        int my_value = lua_evalexpr(L, lua_tointeger, "luaconf.config.my_value");
+
+    -- compile and link your program with luaconf_wrap.cxx and liblua.
+
+    -- Enjoy!
+
+Q & A:
+    Q: Help! I can't use lua_tostring!
+    A: Of course you can't. It's a macro not a function.
+       Use the lua_tocstring function instead (defined in luaconf.hpp).
+
+    Q: How do I retrieve the length of an array?
+    A: Using normal lua expressions (note the '#' in front of the variable):
+
+        int length = lua_evalexpr(L, lua_tointeger, "#luaconf.config.array_variable");
+
+    Q: Do I have to mess with string manipulation to retrieve programmatic variables?
+    A: No, you can use lua_evalexpr, it actually works like printf :)
+       For example, you can write something like this to retrieve array elements:
+
+        for (int i = 0; i < length; i++)
+            a[i] = lua_evalexpr(L, lua_tointeger,
+                "#luaconf.config.array_variable[%d]", i);
+
+    Q: What callback functions can I use?
+    A: You can use the following:
+        lua_tointeger for converting to integers,
+        lua_tonumber for floating point numbers and
+        lua_tocstring for character arrays.
+
